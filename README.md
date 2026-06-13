@@ -13,6 +13,13 @@ Everything is in [`challenge/PROBLEM.md`](challenge/PROBLEM.md). It has two **ga
 
 Dataset: [`challenge/data/companies.csv`](challenge/data/companies.csv).
 
+### How to Run the Solution
+1. Ensure you have Python 3.10+ installed.
+2. Install test dependencies: `pip install pytest`
+3. Run the Contact Finder pipeline: `python solve.py`
+    - Output will be saved to `output/results.csv`
+4. Run the test suite: `python -m pytest test_solve.py -v`
+
 ## How to submit
 - Your own repo (private is fine — add `wwwidr` as a collaborator), with `PLAN.md` committed **first** (git timestamps are part of the signal), then your slice.
 - **REQUIRED — a 2-3 minute screen recording** (Loom or similar, no webcam needed) showing you STARTING a fresh task from your very first click: *"find 10 companies that would want AgentCollect and why."* Talk through what you do as you go, and say in one line what AgentCollect does. We watch HOW you start, not the finished result. No video = we can't book a live conversation.

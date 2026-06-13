@@ -240,9 +240,12 @@ def compute_confidence(
     if email_corr:
         breakdown["email_corroborates"] = 10
 
-    # 7. Role identified (+5)
+    # 7. Role identified (variable bonus based on priority)
     if contact_role:
-        breakdown["role_identified"] = 5
+        rank = role_priority_rank(contact_role)
+        # 1 (AP) -> +15, 2 (Owner) -> +10, 3 (CFO) -> +5, 4+ (Other) -> +2
+        bonus = 15 if rank == 1 else 10 if rank == 2 else 5 if rank == 3 else 2
+        breakdown[f"role_identified_rank_{rank}"] = bonus
 
     # Penalties
     if generic_email:
@@ -257,10 +260,6 @@ def compute_confidence(
     if not has_name:
         breakdown["no_name_penalty"] = -5
 
-    score = base + sum(v for k, v in breakdown.items() if k != "enrichment_base"
-                       and k != "fallback_base" and k != "no_contact_base")
-    score += base  # base was set above but not included in breakdown sum — fix:
-    # Recalculate cleanly:
     score = sum(breakdown.values())
 
     score = max(0, min(100, score))
