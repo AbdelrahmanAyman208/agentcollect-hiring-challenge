@@ -83,6 +83,17 @@ def calculate_score(company, providers):
         # No contact method
         score = 0
 
+    # Adapt to CLARIFICATIONS.md: Role priority
+    role_bonus = 0
+    if contact_role:
+        r_lower = contact_role.lower()
+        if "ap" in r_lower or "payable" in r_lower or "cfo" in r_lower or "finance" in r_lower:
+            role_bonus = 10
+        elif "owner" in r_lower or "founder" in r_lower or "president" in r_lower:
+            role_bonus = 5
+            
+    score += role_bonus
+
     score = min(max(int(score), 0), 100)
     
     return {
