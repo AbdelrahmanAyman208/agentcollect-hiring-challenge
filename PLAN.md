@@ -1,18 +1,28 @@
 # PLAN.md
 
 ## Architecture
-The system will be a command-line script (likely Node.js/TypeScript or Python) that processes the input CSV sequentially.
-- **Data Ingestion**: A CSV parser reads `data/companies.csv`, emitting row objects (`company_name`, `mailing_address`).
-- **Enrichment Pipeline**: For each row, the system orchestrates calls across multiple `ContactProvider` interfaces (abstractions over the mock APIs). It aggregates the responses.
-- **Scoring Engine**: Evaluates the collected contact points against our confidence logic to select the best candidate.
-- **Output Formatter**: Generates a final CSV or JSON with the required columns (`contact_name`, `contact_role`, `contact_email_or_phone`, `confidence_score`, `source`, `needs_human_review`).
+The system is designed as a pipeline that can scale to thousands of records via batching.
+
+```text
+[CSV Ingestion] → [Provider Orchestrator] → [Scoring Engine] → [Output Formatter]
+      │                     │                       │                  │
+Reads & chunks      Fan-out async calls       Applies rules      Emits CSV/JSON
+validates state     to Registry/Listing       Role + Name        Flags for review
+                    & Enrichment APIs         corroboration
+```
+
+- **Data Ingestion**: A CSV parser reads `data/companies.csv`, emitting row objects.
+- **Enrichment Orchestrator**: Handles rate-limiting and fan-out API requests to multiple `ContactProvider` interfaces.
+- **Scoring Engine**: Evaluates collected contact points additively against our confidence logic.
+- **Output Formatter**: Generates a final CSV, explicitly flagging `needs_human_review`.
 
 ## Sources & strategy
-In a real-world scenario, I would use:
-1. **Business Registries (e.g., OpenCorporates, Secretary of State APIs)**: Highly reliable for finding the legal owner or registered agent. Good provenance, but lacks direct emails/phones.
-2. **Professional Networks (e.g., LinkedIn Company & People Search)**: Excellent for identifying current titles (CFO, VP Finance, Owner). Prone to stale data if users don't update profiles.
-3. **B2B Enrichment APIs (e.g., Apollo, Clearbit, ZoomInfo)**: Best for acquiring contact details (emails, direct dials) once a name or domain is identified.
-*Strategy:* First, find the company domain and key personnel names using registries/networks. Then, query enrichment APIs with those names and domains to get verifiable contact information.
+In a real-world scenario, I would chain these sources to mitigate their individual failure modes:
+1. **Business Registries (e.g., OpenCorporates)**: Good for legal owners. *Failure mode*: Often lists external registered agents (law firms) instead of actual owners. We must cross-reference the `mailing_address` to detect if the agent is at a distinct law firm address.
+2. **Professional Networks (e.g., LinkedIn)**: Excellent for finding titles (CFO, VP Finance). *Failure mode*: Highly prone to stale data if users don't update profiles after leaving.
+3. **B2B Enrichment APIs (e.g., Apollo, Clearbit)**: Best for acquiring contact details once a name is known. *Failure mode*: Often guesses emails using `first.last@domain.com` without hard verification.
+
+*Strategy:* Use the CSV `company_name` and `mailing_address` state to query registries. Feed the verified names and the company domain into enrichment APIs to yield contact details. Corroborate the enrichment output against the registry name.
 
 ## Quality
 - **Dedupe approach**: Normalize emails (lowercase, strip whitespace) and phone numbers (E.164 format). Merge records that share the same contact info, combining their source lists.
@@ -40,7 +50,7 @@ In a real-world scenario, I would use:
    - **Default assumption:** Prioritize CFO / Accounts Payable over the Owner for larger accounts, but Owner for very small ones.
    - **What changes if answered:** The sorting logic in the pipeline will assign weights to specific job titles to bubble up the preferred contact.
 
-3. **Question:** Are there specific compliance regimes or regional restrictions we fall under for this specific campaign?
-   - **Why it matters:** It determines if we can legally gather and use phone numbers for cold outreach, or if we must rely strictly on email.
-   - **Default assumption:** Standard US B2B rules apply (CAN-SPAM). Cold emails are permitted with opt-outs, but phone numbers are secondary.
-   - **What changes if answered:** If strict telemarketing laws apply, we might drop phone number enrichment entirely to save costs and eliminate risk.
+3. **Question:** If we find a contact via a single enrichment source with very high provider confidence (e.g., 99%), but we cannot corroborate them against a registry or listing, should we emit them or route to human review?
+   - **Why it matters:** It defines our risk appetite. Enrichment APIs often overstate confidence. If we trust them blindly, we increase false positives (emailing the wrong person for debt collection).
+   - **Default assumption:** I will assume multi-source corroboration is a hard requirement to bypass human review, and a single source is capped below the automation threshold.
+   - **What changes if answered:** If you trust specific vendors deeply, I would add a "trusted vendor bypass" to the scoring engine that allows a single 99% enrichment score to auto-pass.

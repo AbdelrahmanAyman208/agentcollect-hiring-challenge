@@ -20,6 +20,7 @@ import csv
 import json
 import os
 import re
+import argparse
 
 
 # ---------------------------------------------------------------------------
@@ -53,8 +54,25 @@ ROLE_PRIORITY = {
 # Helpers
 # ---------------------------------------------------------------------------
 
+def normalize_email(email: str | None) -> str:
+    """Normalize email: lowercase and stripped."""
+    return email.lower().strip() if email else ""
+
+
+def normalize_phone(phone: str | None) -> str:
+    """Normalize phone: remove non-digits, naive E.164-ish fallback."""
+    if not phone:
+        return ""
+    digits = re.sub(r"\D", "", phone)
+    if len(digits) == 10:
+        return f"+1{digits}"
+    return f"+{digits}" if digits else ""
+
+
 def is_generic_email(email: str) -> bool:
     """Return True if the email starts with a generic/catch-all prefix."""
+    if not email:
+        return False
     lower = email.lower()
     return any(lower.startswith(p) for p in GENERIC_EMAIL_PREFIXES)
 
@@ -170,9 +188,9 @@ def compute_confidence(
     r_name = (registry or {}).get("name")
     r_role = (registry or {}).get("role")
     l_name = (listing or {}).get("name")
-    l_phone = (listing or {}).get("phone")
-    e_email = (enrichment or {}).get("email")
-    e_phone = (enrichment or {}).get("phone")
+    l_phone = normalize_phone((listing or {}).get("phone"))
+    e_email = normalize_email((enrichment or {}).get("email"))
+    e_phone = normalize_phone((enrichment or {}).get("phone"))
     e_conf = (enrichment or {}).get("provider_confidence", 0)
 
     # Collect provenance URLs
@@ -311,6 +329,7 @@ def enrich_company(company_name: str, providers: dict) -> dict:
         "confidence_score": result["confidence_score"],
         "source": " | ".join(result["sources"]),
         "needs_human_review": needs_review,
+        "scoring_breakdown": result["scoring_breakdown"],
     }
 
 
@@ -318,6 +337,7 @@ def process(
     csv_path: str = "challenge/data/companies.csv",
     mocks_path: str = "challenge/mocks/enrichment_responses.json",
     output_path: str = "output/results.csv",
+    verbose: bool = False,
 ):
     """End-to-end pipeline: read CSV → enrich → write results."""
     with open(mocks_path, "r") as f:
@@ -329,7 +349,13 @@ def process(
         for row in reader:
             company = row["company_name"]
             providers = mocks.get(company, {})
-            results.append(enrich_company(company, providers))
+            enriched = enrich_company(company, providers)
+            
+            if verbose:
+                print(f"[{enriched['confidence_score']:>3}] {company}: {enriched['scoring_breakdown']}")
+            
+            del enriched["scoring_breakdown"]
+            results.append(enriched)
 
     # Ensure output directory exists
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
@@ -353,4 +379,7 @@ def process(
 
 
 if __name__ == "__main__":
-    process()
+    parser = argparse.ArgumentParser(description="Contact Finder")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Print scoring breakdowns")
+    args = parser.parse_args()
+    process(verbose=args.verbose)

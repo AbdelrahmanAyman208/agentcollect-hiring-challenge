@@ -1,7 +1,7 @@
 # ABOUT.md
 
 ## Why this role
-I am passionate about building intelligent systems that move beyond brittle scraping into reliable, context-aware data enrichment. The focus on verifiable, provenance-driven pipelines aligns with my philosophy of treating AI outputs as fallible signals that require rigorous validation.
+I am passionate about building intelligent systems that move beyond brittle scraping into reliable, context-aware data enrichment. AgentCollect's mission to modernize B2B debt collection requires exactly this: precision outreach to the right AP managers, where a false positive isn't just an annoyance, but a compliance risk. The focus on verifiable, provenance-driven pipelines aligns perfectly with how I prefer to engineer AI systems.
 
 ## How you work with AI tools
 I use LLMs (Claude, GPT-4) as high-level orchestrators and brainstorming partners, and tools like Copilot for boilerplate. However, I never trust an AI to invent data: I strictly limit its role to parsing, scoring, and routing data from verifiable sources. If an LLM suggests a probabilistic regex or unstructured extraction, I enforce hard fallbacks and explicit "needs_human_review" flags to ensure safety.

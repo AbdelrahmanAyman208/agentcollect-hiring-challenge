@@ -16,7 +16,7 @@ Dataset: [`challenge/data/companies.csv`](challenge/data/companies.csv).
 ### How to Run the Solution
 1. Ensure you have Python 3.10+ installed.
 2. Install test dependencies: `pip install pytest`
-3. Run the Contact Finder pipeline: `python solve.py`
+3. Run the Contact Finder pipeline: `python solve.py` (or `python solve.py --verbose` to see scoring breakdown)
     - Output will be saved to `output/results.csv`
 4. Run the test suite: `python -m pytest test_solve.py -v`
 

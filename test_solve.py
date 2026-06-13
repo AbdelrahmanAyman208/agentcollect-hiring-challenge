@@ -13,6 +13,8 @@ import pytest
 
 from solve import (
     is_generic_email,
+    normalize_email,
+    normalize_phone,
     fuzzy_name_match,
     email_corroborates_name,
     role_priority_rank,
@@ -27,6 +29,28 @@ from solve import (
 # ===================================================================
 # Helper function tests
 # ===================================================================
+
+class TestNormalizeEmail:
+    def test_lowercase_and_strip(self):
+        assert normalize_email("  TEST@Example.com ") == "test@example.com"
+        
+    def test_none_or_empty(self):
+        assert normalize_email(None) == ""
+        assert normalize_email("") == ""
+
+
+class TestNormalizePhone:
+    def test_extract_digits(self):
+        assert normalize_phone("(555) 123-4567") == "+15551234567"
+        
+    def test_e164_fallback(self):
+        assert normalize_phone("1-800-555-1234") == "+18005551234"
+        assert normalize_phone("+44 20 7123 1234") == "+442071231234"
+        
+    def test_none_or_empty(self):
+        assert normalize_phone(None) == ""
+        assert normalize_phone("") == ""
+
 
 class TestIsGenericEmail:
     def test_generic_prefixes(self):
