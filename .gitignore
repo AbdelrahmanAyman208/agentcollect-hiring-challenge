@@ -18,3 +18,10 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Generated artifacts (not source code)
+output/
+output.csv
+__pycache__/
+*.pyc
+.pytest_cache/
