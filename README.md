@@ -1,5 +1,7 @@
 # Respaid / AgentCollect — Hiring Challenge
 
+> **🎥 Loom Video Submission:** [Watch my 3-minute video here](https://www.loom.com/share/c16722fbc20d4a1c848ce490434e8bac)
+
 Welcome. This challenge is **language-agnostic** and **plan-first**. We are not testing whether you know our stack (Laravel + React). We are testing **how you think**: do you plan and ask high-value questions before you build, or do you dive straight into code?
 
 > **Use AI tools.** Claude Code, Cursor, Copilot — we expect and want it. We evaluate how you *direct* AI, not whether you use it.
@@ -23,6 +25,7 @@ Dataset: [`challenge/data/companies.csv`](challenge/data/companies.csv).
 ## How to submit
 - Your own repo (private is fine — add `wwwidr` as a collaborator), with `PLAN.md` committed **first** (git timestamps are part of the signal), then your slice.
 - **REQUIRED — a 2-3 minute screen recording** (Loom or similar, no webcam needed) showing you STARTING a fresh task from your very first click: *"find 10 companies that would want AgentCollect and why."* Talk through what you do as you go, and say in one line what AgentCollect does. We watch HOW you start, not the finished result. No video = we can't book a live conversation.
+  - **✅ DONE:** [Watch the Loom Video Here](https://www.loom.com/share/c16722fbc20d4a1c848ce490434e8bac)
 - Also nice: a clean commit timeline (git timestamps are part of the signal).
 - An `ABOUT.md` at the repo root — template: [`ABOUT.template.md`](ABOUT.template.md).
 
